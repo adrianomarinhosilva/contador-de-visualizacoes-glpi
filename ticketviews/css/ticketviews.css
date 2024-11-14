@@ -1,0 +1,46 @@
+$(document).ready(function() {
+    // Só executa se estivermos em um ticket
+    if (location.pathname.includes('ticket.form.php')) {
+        const tickets_id = getUrlParameter('id');
+        if (tickets_id) {
+            // Função para atualizar o contador
+            function updateViewersCount() {
+                $.ajax({
+                    url: CFG_GLPI.root_doc + '/plugins/ticketviews/ajax/get_viewers_count.php',
+                    type: 'GET',
+                    data: {
+                        tickets_id: tickets_id
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            // Atualiza o contador na aba
+                            const viewersTab = $('li a').filter(function() {
+                                return $(this).text().includes('Visualizadores');
+                            });
+                            
+                            if (viewersTab.length) {
+                                const badgeSpan = viewersTab.find('.badge');
+                                if (badgeSpan.length) {
+                                    badgeSpan.text(response.count);
+                                } else {
+                                    viewersTab.append(`<span class="badge bg-secondary ms-2">${response.count}</span>`);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Função auxiliar para obter parâmetros da URL
+            function getUrlParameter(name) {
+                name = name.replace(/[\[]/, '\\[').replace(/[\]]/, '\\]');
+                var regex = new RegExp('[\\?&]' + name + '=([^&#]*)');
+                var results = regex.exec(location.search);
+                return results === null ? '' : decodeURIComponent(results[1].replace(/\+/g, ' '));
+            }
+
+            // Atualiza a cada 30 segundos
+            setInterval(updateViewersCount, 30000);
+        }
+    }
+});
